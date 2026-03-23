@@ -8,8 +8,11 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test (Go ${{ matrix.go-version }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22', '1.23']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,15 +20,29 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: ${{ matrix.go-version }}
 
       - name: Download dependencies
         run: go mod download
 
-      - name: Run tests with coverage
-        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests with coverage and race detection
+        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic -count=1
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "Total coverage: ${COVERAGE}%"
+          THRESHOLD=50
+          if [ "$(echo "$COVERAGE < $THRESHOLD" | bc -l)" -eq 1 ]; then
+            echo "Coverage ${COVERAGE}% is below threshold ${THRESHOLD}%"
+            exit 1
+          fi
 
       - name: Upload coverage to Codecov
+        if: matrix.go-version == '1.22'
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.out
@@ -41,12 +58,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.22'
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.57.2
 
   build:
     name: Build
@@ -58,7 +75,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.22'
 
       - name: Build
         run: go build ./...
