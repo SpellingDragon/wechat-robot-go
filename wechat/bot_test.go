@@ -616,9 +616,9 @@ func TestBot_SendToUser(t *testing.T) {
 
 	// Test SendFileToUser
 	fileItem := &FileItem{
-		Media:     &CDNMedia{EncryptQueryParam: "param", AESKey: "key", EncryptType: 1},
-		FileName:  "test.txt",
-		Length:    "100",
+		Media:    &CDNMedia{EncryptQueryParam: "param", AESKey: "key", EncryptType: 1},
+		FileName: "test.txt",
+		Length:   "100",
 	}
 	err = bot.SendFileToUser(ctx, "user-123", fileItem)
 	if err != nil {
