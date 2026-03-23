@@ -550,7 +550,7 @@ flowchart TB
 
     Bot --> Auth["Auth<br/>QR 码登录 + 凭证持久化"]
     Bot --> Poller["Poller<br/>长轮询消息接收"]
-    Bot --> TypingManager["TypingManager<br/>"正在输入" 状态管理"]
+    Bot --> TypingManager["TypingManager<br/>正在输入状态管理"]
     Bot --> MediaManager["MediaManager<br/>媒体加密上传/下载"]
     Bot --> MiddlewareChain["中间件链<br/>恢复 + 日志 + 自定义"]
 
