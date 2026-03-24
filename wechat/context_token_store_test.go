@@ -231,8 +231,12 @@ func TestMemoryContextTokenStore(t *testing.T) {
 	}
 
 	// ClearAll
-	store.Save("user1", "token1")
-	store.Save("user2", "token2")
+	if err := store.Save("user1", "token1"); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+	if err := store.Save("user2", "token2"); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
 	err = store.ClearAll()
 	if err != nil {
 		t.Fatalf("ClearAll() error = %v", err)
@@ -333,8 +337,12 @@ func TestMemoryContextTokenStore_CleanExpired(t *testing.T) {
 	store := NewMemoryContextTokenStore()
 
 	// Save tokens
-	store.Save("user1", "token1")
-	store.Save("user2", "token2")
+	if err := store.Save("user1", "token1"); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+	if err := store.Save("user2", "token2"); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
 
 	if c := store.Count(); c != 2 {
 		t.Errorf("Count() = %d, want 2", c)

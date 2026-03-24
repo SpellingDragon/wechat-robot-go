@@ -11,7 +11,9 @@ import (
 func generateClientID() string {
 	// Generate random part (8 characters)
 	b := make([]byte, 4)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to zero bytes if rand.Read fails (should never happen)
+	}
 	randomPart := fmt.Sprintf("%x", b)
 
 	// For timestamp, use a simple counter or random

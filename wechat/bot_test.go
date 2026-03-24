@@ -251,8 +251,12 @@ func TestBot_Reply(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/ilink/bot/sendmessage" {
 			sentRequest = &SendMessageRequest{}
-			json.NewDecoder(r.Body).Decode(sentRequest)
-			json.NewEncoder(w).Encode(SendMessageResponse{Ret: 0})
+			if err := json.NewDecoder(r.Body).Decode(sentRequest); err != nil {
+				t.Logf("Decode error: %v", err)
+			}
+			if err := json.NewEncoder(w).Encode(SendMessageResponse{Ret: 0}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -291,14 +295,20 @@ func TestBot_SendTyping(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/ilink/bot/getconfig":
-			json.NewEncoder(w).Encode(GetConfigResponse{
+			if err := json.NewEncoder(w).Encode(GetConfigResponse{
 				Ret:          0,
 				TypingTicket: "typing-ticket-123",
-			})
+			}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		case "/ilink/bot/sendtyping":
 			typingRequest = &SendTypingRequest{}
-			json.NewDecoder(r.Body).Decode(typingRequest)
-			json.NewEncoder(w).Encode(SendTypingResponse{Ret: 0})
+			if err := json.NewDecoder(r.Body).Decode(typingRequest); err != nil {
+				t.Logf("Decode error: %v", err)
+			}
+			if err := json.NewEncoder(w).Encode(SendTypingResponse{Ret: 0}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -332,14 +342,20 @@ func TestBot_StopTyping(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/ilink/bot/getconfig":
-			json.NewEncoder(w).Encode(GetConfigResponse{
+			if err := json.NewEncoder(w).Encode(GetConfigResponse{
 				Ret:          0,
 				TypingTicket: "typing-ticket-123",
-			})
+			}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		case "/ilink/bot/sendtyping":
 			typingRequest = &SendTypingRequest{}
-			json.NewDecoder(r.Body).Decode(typingRequest)
-			json.NewEncoder(w).Encode(SendTypingResponse{Ret: 0})
+			if err := json.NewDecoder(r.Body).Decode(typingRequest); err != nil {
+				t.Logf("Decode error: %v", err)
+			}
+			if err := json.NewEncoder(w).Encode(SendTypingResponse{Ret: 0}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -524,22 +540,31 @@ func TestBot_SendFromPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	tmpFile.Write([]byte("fake image data"))
+	if _, err := tmpFile.Write([]byte("fake image data")); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
 	tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/ilink/bot/getuploadurl":
-			json.NewEncoder(w).Encode(UploadURLResponse{
+			if err := json.NewEncoder(w).Encode(UploadURLResponse{
 				Ret:         0,
 				UploadParam: "test-param",
-			})
+			}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		case "/upload":
 			w.Header().Set("x-encrypted-param", "test-encrypted")
+			if _, err := w.Write([]byte{}); err != nil {
+				t.Logf("Write error: %v", err)
+			}
 			w.WriteHeader(http.StatusOK)
 		case "/ilink/bot/sendmessage":
-			json.NewEncoder(w).Encode(SendMessageResponse{Ret: 0})
+			if err := json.NewEncoder(w).Encode(SendMessageResponse{Ret: 0}); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -552,7 +577,9 @@ func TestBot_SendFromPath(t *testing.T) {
 	bot.media.SetCDNBaseURL(server.URL)
 
 	// Store context token for user
-	bot.contextTokens.Save("user-123", "ctx-token")
+	if err := bot.contextTokens.Save("user-123", "ctx-token"); err != nil {
+		t.Fatalf("Save context token: %v", err)
+	}
 
 	ctx := context.Background()
 
@@ -663,7 +690,9 @@ func TestBot_DownloadImage(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/download" {
 			w.WriteHeader(http.StatusOK)
-			w.Write(testData)
+			if _, err := w.Write(testData); err != nil {
+				t.Logf("Write error: %v", err)
+			}
 		}
 	}))
 	defer server.Close()

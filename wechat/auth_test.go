@@ -111,7 +111,9 @@ func TestAuth_GetQRCode(t *testing.T) {
 			t.Errorf("bot_type = %q, want %q", r.URL.Query().Get("bot_type"), "3")
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(expectedResp)
+		if err := json.NewEncoder(w).Encode(expectedResp); err != nil {
+			t.Logf("Encode error: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -161,7 +163,9 @@ func TestAuth_PollQRCodeStatus(t *testing.T) {
 					BaseURL:  tt.baseURL,
 				}
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(resp)
+				if err := json.NewEncoder(w).Encode(resp); err != nil {
+					t.Logf("Encode error: %v", err)
+				}
 			}))
 			defer server.Close()
 
@@ -189,7 +193,9 @@ func TestAuth_LoginWithExistingToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		// Return valid response for getconfig
-		w.Write([]byte(`{"ret": 0, "typing_ticket": "test-ticket"}`))
+		if _, err := w.Write([]byte(`{"ret": 0, "typing_ticket": "test-ticket"}`)); err != nil {
+			t.Logf("Write error: %v", err)
+		}
 	}))
 	defer server.Close()
 
@@ -229,7 +235,9 @@ func TestAuth_LoginWithInvalidToken(t *testing.T) {
 
 		if r.URL.Path == "/ilink/bot/getconfig" {
 			// Return session expired
-			w.Write([]byte(`{"ret": -14, "errcode": -14, "errmsg": "session expired"}`))
+			if _, err := w.Write([]byte(`{"ret": -14, "errcode": -14, "errmsg": "session expired"}`)); err != nil {
+				t.Logf("Write error: %v", err)
+			}
 			return
 		}
 
@@ -240,7 +248,9 @@ func TestAuth_LoginWithInvalidToken(t *testing.T) {
 				QRCodeImgURL:     "https://example.com/qr.png",
 				QRCodeImgContent: "base64-qr",
 			}
-			json.NewEncoder(w).Encode(resp)
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 
 		case "/ilink/bot/get_qrcode_status":
 			count := pollCount.Add(1)
