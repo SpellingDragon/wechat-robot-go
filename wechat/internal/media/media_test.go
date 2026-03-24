@@ -99,11 +99,16 @@ func TestMediaManager_UploadFileRetry(t *testing.T) {
 		if attemptCount == 1 {
 			// First attempt returns 500
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal error"))
+			if _, err := w.Write([]byte("internal error")); err != nil {
+				t.Logf("Write error: %v", err)
+			}
 			return
 		}
 		// Second attempt succeeds
 		w.Header().Set("x-encrypted-param", "success-param")
+		if _, err := w.Write([]byte{}); err != nil {
+			t.Logf("Write error: %v", err)
+		}
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer cdnServer.Close()
@@ -142,7 +147,9 @@ func TestMediaManager_UploadFile4xxNoRetry(t *testing.T) {
 	cdnServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attemptCount++
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("bad request"))
+		if _, err := w.Write([]byte("bad request")); err != nil {
+			t.Logf("Write error: %v", err)
+		}
 	}))
 	defer cdnServer.Close()
 
@@ -189,7 +196,9 @@ func TestMediaManager_DownloadFile(t *testing.T) {
 			t.Errorf("expected GET, got %s", r.Method)
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write(encrypted)
+		if _, err := w.Write(encrypted); err != nil {
+			t.Logf("Write error: %v", err)
+		}
 	}))
 	defer server.Close()
 

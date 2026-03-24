@@ -263,7 +263,9 @@ func TestAuth_LoginWithInvalidToken(t *testing.T) {
 					BotToken: "new-token",
 				}
 			}
-			json.NewEncoder(w).Encode(resp)
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 		}
 	}))
 	defer server.Close()
@@ -311,7 +313,9 @@ func TestAuth_LoginFullFlow(t *testing.T) {
 				QRCodeImgURL:     "https://example.com/qr.png",
 				QRCodeImgContent: "base64-qr-image",
 			}
-			json.NewEncoder(w).Encode(resp)
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 
 		case "/ilink/bot/get_qrcode_status":
 			count := pollCount.Add(1)
@@ -327,7 +331,9 @@ func TestAuth_LoginFullFlow(t *testing.T) {
 					BaseURL:  "https://new-api.example.com",
 				}
 			}
-			json.NewEncoder(w).Encode(resp)
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				t.Logf("Encode error: %v", err)
+			}
 
 		default:
 			t.Errorf("unexpected path: %s", r.URL.Path)
