@@ -150,6 +150,92 @@ func MyMiddleware() wechat.Middleware {
 combined := wechat.Chain(m1, m2, m3) // m1(m2(m3(handler)))
 ```
 
+#### Advanced Middleware Examples
+
+**Rate Limiter Middleware**
+
+```go
+func RateLimiter(limit int, window time.Duration) wechat.Middleware {
+    var (
+        mu       sync.Mutex
+        requests = make(map[string][]time.Time)
+    )
+    return func(next wechat.MessageHandler) wechat.MessageHandler {
+        return func(ctx context.Context, msg *wechat.Message) error {
+            mu.Lock()
+            userID := msg.FromUserID
+            now := time.Now()
+            // Clean old requests
+            var valid []time.Time
+            for _, t := range requests[userID] {
+                if now.Sub(t) < window {
+                    valid = append(valid, t)
+                }
+            }
+            if len(valid) >= limit {
+                mu.Unlock()
+                return errors.New("rate limit exceeded")
+            }
+            requests[userID] = append(valid, now)
+            mu.Unlock()
+            return next(ctx, msg)
+        }
+    }
+}
+
+// Usage: bot.Use(RateLimiter(10, time.Minute)) // 10 msgs per minute
+```
+
+**Auth Middleware (Whitelist)**
+
+```go
+func AuthMiddleware(allowedUsers map[string]bool) wechat.Middleware {
+    return func(next wechat.MessageHandler) wechat.MessageHandler {
+        return func(ctx context.Context, msg *wechat.Message) error {
+            if !allowedUsers[msg.FromUserID] {
+                slog.Warn("unauthorized user", "user_id", msg.FromUserID)
+                return nil // silently ignore
+            }
+            return next(ctx, msg)
+        }
+    }
+}
+
+// Usage
+allowed := map[string]bool{"user1@im.wechat": true, "user2@im.wechat": true}
+bot.Use(AuthMiddleware(allowed))
+```
+
+## Project Structure
+
+```
+wechat/
+├── internal/
+│   ├── crypto/       # AES-128-ECB encryption/decryption
+│   ├── model/        # Message data types + MessageHandler
+│   ├── store/        # ContextTokenStore interface + implementations
+│   ├── middleware/   # Middleware framework
+│   ├── text/         # Smart text splitting algorithm
+│   └── media/        # CDN upload/download + message builders
+├── auth.go           # Login authentication
+├── bot.go            # Bot facade API
+├── client.go         # HTTP client
+├── config.go         # Configuration loading
+├── errors.go         # Error types
+├── message_send.go   # Message sending
+├── message_send_media.go  # Media message sending
+├── options.go        # Functional Options
+├── poller.go         # Long-polling
+├── text_split.go     # SendLongText (depends on internal/text)
+├── typing.go         # Typing status
+└── types.go          # Type aliases (backward compatible)
+```
+
+**Design Philosophy**: Implementation details are isolated in `internal/` subpackages, while the main package exposes a clean API through type aliases. This ensures:
+- External code doesn't need to change when internal implementations evolve
+- Clear separation between public API and private implementation
+- Better code organization and maintainability
+
 ## Architecture
 
 ```mermaid
@@ -330,6 +416,92 @@ func MyMiddleware() wechat.Middleware {
 // 组合中间件
 combined := wechat.Chain(m1, m2, m3) // m1(m2(m3(handler)))
 ```
+
+#### 高级中间件示例
+
+**限流中间件 (Rate Limiter)**
+
+```go
+func RateLimiter(limit int, window time.Duration) wechat.Middleware {
+    var (
+        mu       sync.Mutex
+        requests = make(map[string][]time.Time)
+    )
+    return func(next wechat.MessageHandler) wechat.MessageHandler {
+        return func(ctx context.Context, msg *wechat.Message) error {
+            mu.Lock()
+            userID := msg.FromUserID
+            now := time.Now()
+            // 清理过期请求
+            var valid []time.Time
+            for _, t := range requests[userID] {
+                if now.Sub(t) < window {
+                    valid = append(valid, t)
+                }
+            }
+            if len(valid) >= limit {
+                mu.Unlock()
+                return errors.New("rate limit exceeded")
+            }
+            requests[userID] = append(valid, now)
+            mu.Unlock()
+            return next(ctx, msg)
+        }
+    }
+}
+
+// 使用：bot.Use(RateLimiter(10, time.Minute)) // 每分钟最多 10 条消息
+```
+
+**认证中间件（白名单）**
+
+```go
+func AuthMiddleware(allowedUsers map[string]bool) wechat.Middleware {
+    return func(next wechat.MessageHandler) wechat.MessageHandler {
+        return func(ctx context.Context, msg *wechat.Message) error {
+            if !allowedUsers[msg.FromUserID] {
+                slog.Warn("unauthorized user", "user_id", msg.FromUserID)
+                return nil // 静默忽略
+            }
+            return next(ctx, msg)
+        }
+    }
+}
+
+// 使用
+allowed := map[string]bool{"user1@im.wechat": true, "user2@im.wechat": true}
+bot.Use(AuthMiddleware(allowed))
+```
+
+## 项目结构
+
+```
+wechat/
+├── internal/
+│   ├── crypto/       # AES-128-ECB 加解密
+│   ├── model/        # 消息数据类型 + MessageHandler
+│   ├── store/        # ContextTokenStore 接口 + 文件/内存实现
+│   ├── middleware/   # 中间件框架
+│   ├── text/         # 智能文本分片算法
+│   └── media/        # CDN 上传下载 + 消息构建器
+├── auth.go           # 登录认证
+├── bot.go            # Bot 门面 API
+├── client.go         # HTTP 客户端
+├── config.go         # 配置加载
+├── errors.go         # 错误类型
+├── message_send.go   # 消息发送
+├── message_send_media.go  # 媒体消息发送
+├── options.go        # Functional Options
+├── poller.go         # 长轮询
+├── text_split.go     # SendLongText（依赖 internal/text）
+├── typing.go         # Typing 状态
+└── types.go          # Type aliases（向后兼容）
+```
+
+**设计理念**：实现细节隔离在 `internal/` 子包中，主包通过 type alias 对外暴露简洁的 API。这样设计的好处：
+- 外部用户代码在内部实现变更时无需修改
+- 公开 API 与私有实现清晰分离
+- 更好的代码组织和可维护性
 
 ### 消息类型
 

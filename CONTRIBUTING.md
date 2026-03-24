@@ -110,28 +110,49 @@ PR Checklist:
 
 ```
 wechat/
-├── auth.go                # Login authentication
-├── bot.go                 # Bot core logic & facade API
-├── client.go              # HTTP client
-├── crypto.go              # AES encryption utilities
-├── cdn.go                 # CDN upload/download
-├── media_builder.go       # Media message item builders
-├── message.go             # Message types
-├── message_send.go        # Core message sending
-├── message_send_media.go  # One-stop media sending
-├── text_split.go          # Smart text splitting
-├── middleware.go           # Middleware chain
-├── poller.go              # Long-polling
-├── context_token_store.go # Context token persistence
-├── typing.go              # Typing status
-├── options.go             # Configuration options
-├── errors.go              # Error types
-└── *_test.go              # Test files
+├── internal/                  # Private implementation packages
+│   ├── crypto/                # AES-128-ECB encryption/decryption
+│   ├── model/                 # Message data types + MessageHandler
+│   ├── store/                 # ContextTokenStore interface + implementations
+│   ├── middleware/            # Middleware framework
+│   ├── text/                  # Smart text splitting algorithm
+│   └── media/                 # CDN upload/download + message builders
+├── auth.go                    # Login authentication
+├── bot.go                     # Bot facade API
+├── client.go                  # HTTP client
+├── config.go                  # Configuration loading
+├── errors.go                  # Error types
+├── message_send.go            # Core message sending
+├── message_send_media.go      # One-stop media sending
+├── options.go                 # Functional Options
+├── poller.go                  # Long-polling
+├── text_split.go              # SendLongText (uses internal/text)
+├── typing.go                  # Typing status
+├── types.go                   # Type aliases (backward compatible)
+└── *_test.go                  # Test files
 
 examples/
-├── echo/                  # Echo bot example
-└── ai-agent/              # AI Agent example
+├── echo/                      # Echo bot example
+└── ai-agent/                  # AI Agent example
 ```
+
+### internal/ Development Guidelines
+
+The `internal/` directory contains private implementation packages that are not accessible to external users. When developing in these packages:
+
+1. **Encapsulation**: Each subpackage should have a single responsibility
+   - `crypto/` — Only encryption/decryption logic
+   - `model/` — Only data structures and type definitions
+   - `store/` — Only token persistence implementations
+   - `middleware/` — Only middleware chain logic
+   - `text/` — Only text splitting algorithms
+   - `media/` — Only CDN operations and message builders
+
+2. **Exports through main package**: Public types/functions should be re-exported via type aliases in `wechat/types.go`
+
+3. **Testing**: Each internal package should have its own `*_test.go` files
+
+4. **No cross-internal imports**: Avoid importing between internal packages when possible to maintain clear dependency boundaries
 
 ## Code of Conduct
 
@@ -257,28 +278,49 @@ PR 检查清单：
 
 ```
 wechat/
-├── auth.go                # 登录认证
-├── bot.go                 # Bot 核心逻辑和门面 API
-├── client.go              # HTTP 客户端
-├── crypto.go              # AES 加密工具
-├── cdn.go                 # CDN 上传/下载
-├── media_builder.go       # 媒体消息构建器
-├── message.go             # 消息结构
-├── message_send.go        # 核心消息发送
-├── message_send_media.go  # 一站式媒体发送
-├── text_split.go          # 智能文本分片
-├── middleware.go           # 中间件链
-├── poller.go              # 长轮询
-├── context_token_store.go # Context Token 持久化
-├── typing.go              # Typing 状态
-├── options.go             # 配置选项
-├── errors.go              # 错误类型
-└── *_test.go              # 测试文件
+├── internal/                  # 私有实现包
+│   ├── crypto/                # AES-128-ECB 加解密
+│   ├── model/                 # 消息数据类型 + MessageHandler
+│   ├── store/                 # ContextTokenStore 接口 + 文件/内存实现
+│   ├── middleware/            # 中间件框架
+│   ├── text/                  # 智能文本分片算法
+│   └── media/                 # CDN 上传下载 + 消息构建器
+├── auth.go                    # 登录认证
+├── bot.go                     # Bot 门面 API
+├── client.go                  # HTTP 客户端
+├── config.go                  # 配置加载
+├── errors.go                  # 错误类型
+├── message_send.go            # 核心消息发送
+├── message_send_media.go      # 一站式媒体发送
+├── options.go                 # Functional Options
+├── poller.go                  # 长轮询
+├── text_split.go              # SendLongText（使用 internal/text）
+├── typing.go                  # Typing 状态
+├── types.go                   # Type aliases（向后兼容）
+└── *_test.go                  # 测试文件
 
 examples/
-├── echo/                  # Echo 示例
-└── ai-agent/              # AI Agent 示例
+├── echo/                      # Echo 示例
+└── ai-agent/                  # AI Agent 示例
 ```
+
+### internal/ 开发规范
+
+`internal/` 目录包含私有实现包，外部用户无法访问。在这些包中开发时，请遵循以下规范：
+
+1. **职责单一**：每个子包应专注于单一职责
+   - `crypto/` — 仅包含加解密逻辑
+   - `model/` — 仅包含数据结构和类型定义
+   - `store/` — 仅包含 token 持久化实现
+   - `middleware/` — 仅包含中间件链逻辑
+   - `text/` — 仅包含文本分片算法
+   - `media/` — 仅包含 CDN 操作和消息构建器
+
+2. **通过主包导出**：公开类型/函数应通过 `wechat/types.go` 中的 type alias 重新导出
+
+3. **测试**：每个 internal 包应有独立的 `*_test.go` 文件
+
+4. **避免交叉依赖**：尽量避免 internal 包之间相互导入，保持清晰的依赖边界
 
 ## 行为准则
 
