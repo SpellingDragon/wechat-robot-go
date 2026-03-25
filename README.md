@@ -12,6 +12,8 @@
 
 ---
 
+[iLink API 参考](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
+
 ## ✨ 特性
 
 - 📱 **扫码登录** - 自动持久化凭证，一劳永逸
@@ -237,7 +239,6 @@ wechat/
 - [Wiki 首页](https://github.com/SpellingDragon/wechat-robot-go/wiki)
 - [架构设计](https://github.com/SpellingDragon/wechat-robot-go/wiki/Architecture)
 - [中间件指南](https://github.com/SpellingDragon/wechat-robot-go/wiki/Middleware-Guide)
-- [iLink API 参考](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
 
 ---
 
@@ -252,6 +253,8 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 # English
 
 Go SDK for WeChat Bot based on Tencent's official iLink Bot API.
+
+[iLink API Reference](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
 
 ## Features
 
@@ -292,6 +295,7 @@ bot.Run(ctx)
 <a name="中文"></a>
 
 # 中文
+[iLink API Reference](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
 
 基于腾讯 iLink Bot API 的微信机器人 Go SDK，几行代码接入微信消息。
 
