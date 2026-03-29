@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/text"
 )
 
 func TestSendLongText(t *testing.T) {
@@ -27,17 +29,19 @@ func TestSendLongText(t *testing.T) {
 	client := NewClient(server.URL, server.Client(), nil, "1.0.3")
 	client.SetToken("test-token")
 
-	// Create a long text
-	longText := strings.Repeat("This is a test sentence. ", 50) // ~1250 chars
+	// Create a long text that results in more than MaxChunkCount chunks with old limit
+	// With new 1500 char limit, this should produce fewer chunks
+	longText := strings.Repeat("This is a test sentence. ", 100) // ~2500 chars
 
 	ctx := context.Background()
-	count, err := SendLongText(ctx, client, "user-123", longText, "ctx-token")
+	count, err := SendLongText(ctx, client, nil, "user-123", longText, "ctx-token")
 	if err != nil {
 		t.Fatalf("SendLongText failed: %v", err)
 	}
 
-	if count < 2 {
-		t.Errorf("SendLongText sent %d messages, expected at least 2", count)
+	// With 1500 char limit, ~2500 char text should produce at most 2 messages
+	if count > text.MaxChunkCount {
+		t.Errorf("SendLongText sent %d messages, expected at most %d", count, text.MaxChunkCount)
 	}
 
 	if len(sentMessages) != count {
@@ -59,7 +63,7 @@ func TestSendLongText_Error(t *testing.T) {
 	longText := strings.Repeat("Test ", 200)
 
 	ctx := context.Background()
-	_, err := SendLongText(ctx, client, "user-123", longText, "ctx-token")
+	_, err := SendLongText(ctx, client, nil, "user-123", longText, "ctx-token")
 	if err == nil {
 		t.Error("SendLongText should return error on server error")
 	}

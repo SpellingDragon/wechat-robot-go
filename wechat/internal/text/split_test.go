@@ -170,8 +170,14 @@ func TestSplitTextPreservesContent(t *testing.T) {
 }
 
 func TestDefaultMaxTextLength(t *testing.T) {
-	if text.DefaultMaxTextLength != 500 {
-		t.Errorf("DefaultMaxTextLength = %d, want 500", text.DefaultMaxTextLength)
+	if text.DefaultMaxTextLength != 1500 {
+		t.Errorf("DefaultMaxTextLength = %d, want 1500", text.DefaultMaxTextLength)
+	}
+}
+
+func TestMaxChunkCount(t *testing.T) {
+	if text.MaxChunkCount != 5 {
+		t.Errorf("MaxChunkCount = %d, want 5", text.MaxChunkCount)
 	}
 }
 

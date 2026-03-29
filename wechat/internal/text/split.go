@@ -5,9 +5,13 @@ package text
 
 const (
 	// DefaultMaxTextLength is the default maximum text length per message.
-	// WeChat has a limit around 500-1000 characters depending on client.
-	// We use a conservative limit to ensure delivery.
-	DefaultMaxTextLength = 500
+	// WeChat has a limit around 2000-4000 characters depending on client.
+	// We use a moderate limit to ensure delivery while minimizing fragmentation.
+	DefaultMaxTextLength = 1500
+
+	// MaxChunkCount is the maximum number of text chunks allowed before
+	// converting to file. WeChat API typically limits to 5 messages per response.
+	MaxChunkCount = 5
 )
 
 // SplitText splits a long text into multiple chunks that fit within the message limit.
