@@ -215,6 +215,12 @@ func (b *Bot) DownloadVideoFromItem(ctx context.Context, video *VideoItem, cdnBa
 	return b.media.DownloadVideoItem(ctx, cdnBaseURL, video)
 }
 
+// Media returns the MediaManager for this bot.
+// The MediaManager is used for uploading and downloading media files.
+func (b *Bot) Media() *MediaManager {
+	return b.media
+}
+
 // SendImageFromPath sends an image file to a user.
 // It uploads the file and sends the image message in one step.
 func (b *Bot) SendImageFromPath(ctx context.Context, toUserID string, imagePath string) error {

@@ -84,7 +84,7 @@ func main() {
 		// Use SendLongText for potentially long AI responses
 		token, _ := bot.GetContextToken(msg.FromUserID)
 		if token != "" {
-			_, err = wechat.SendLongText(ctx, bot.Client(), msg.FromUserID, response, token)
+			_, err = wechat.SendLongText(ctx, bot.Client(), bot.Media(), msg.FromUserID, response, token)
 			if err != nil {
 				return bot.Reply(ctx, msg, response)
 			}
