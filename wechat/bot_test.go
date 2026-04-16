@@ -55,7 +55,26 @@ func TestNewBot(t *testing.T) {
 			t.Errorf("channelVersion = %q, want %q", bot.config.channelVersion, "2.0.0")
 		}
 	})
+
+	t.Run("custom token store", func(t *testing.T) {
+		store := &testTokenStore{}
+		bot := NewBot(WithTokenStore(store))
+		if bot.auth == nil {
+			t.Fatal("auth should not be nil")
+		}
+		if bot.auth.store != store {
+			t.Error("auth should use the custom token store")
+		}
+	})
 }
+
+type testTokenStore struct{}
+
+func (s *testTokenStore) Load() (*Credentials, error) { return nil, nil }
+
+func (s *testTokenStore) Save(creds *Credentials) error { return nil }
+
+func (s *testTokenStore) Clear() error { return nil }
 
 func TestBot_RunWithoutLogin(t *testing.T) {
 	bot := NewBot()

@@ -55,8 +55,13 @@ func NewBot(opts ...Option) *Bot {
 	// 2. Create Client
 	client := NewClient(cfg.baseURL, cfg.httpClient, cfg.logger, cfg.channelVersion)
 
-	// 3. Create Auth with FileTokenStore
-	tokenStore := NewFileTokenStore(cfg.tokenFile)
+	// 3. Create Auth with configurable TokenStore
+	var tokenStore TokenStore
+	if cfg.tokenStore != nil {
+		tokenStore = cfg.tokenStore
+	} else {
+		tokenStore = NewFileTokenStore(cfg.tokenFile)
+	}
 	auth := NewAuth(client, tokenStore, cfg.logger)
 
 	// 4. Create ContextTokenStore for persisting context tokens
