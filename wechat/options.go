@@ -23,6 +23,7 @@ type botConfig struct {
 	baseURL           string
 	cdnBaseURL        string
 	tokenFile         string
+	tokenStore        TokenStore
 	contextTokenDir   string
 	contextTokenStore ContextTokenStore
 	httpClient        *http.Client
@@ -56,6 +57,13 @@ func WithCDNBaseURL(url string) Option {
 // WithTokenFile sets the path for token persistence.
 func WithTokenFile(path string) Option {
 	return func(c *botConfig) { c.tokenFile = path }
+}
+
+// WithTokenStore sets a custom token store for login credentials.
+// This allows using custom storage implementations (e.g., database, Redis).
+// When provided, it takes precedence over WithTokenFile.
+func WithTokenStore(store TokenStore) Option {
+	return func(c *botConfig) { c.tokenStore = store }
 }
 
 // WithContextTokenDir sets the directory path for persisting context tokens.
