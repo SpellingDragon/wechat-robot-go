@@ -19,20 +19,39 @@ type Poller struct {
 	channelVersion string
 	stopCh         chan struct{}
 	stopCancel     context.CancelFunc
+	cursorStore    CursorStore
 	mu             sync.RWMutex
 	wg             sync.WaitGroup // tracks in-flight handler goroutines
 }
 
-// NewPoller creates a new Poller instance.
+// NewPoller creates a new Poller instance (no cursor persistence).
 func NewPoller(client *Client, handler MessageHandler, logger *slog.Logger, channelVersion string) *Poller {
-	return &Poller{
+	return NewPollerWithCursorStore(client, handler, logger, channelVersion, nil)
+}
+
+// NewPollerWithCursorStore creates a new Poller that persists its getupdates
+// cursor via the given store. If store is nil the poller behaves exactly like
+// NewPoller (in-memory cursor only). On construction a persisted cursor is
+// loaded; a load failure is logged and polling starts with an empty cursor.
+func NewPollerWithCursorStore(client *Client, handler MessageHandler, logger *slog.Logger, channelVersion string, store CursorStore) *Poller {
+	p := &Poller{
 		client:         client,
 		handler:        handler,
 		getUpdatesBuf:  "",
 		logger:         logger,
 		channelVersion: channelVersion,
 		stopCh:         make(chan struct{}),
+		cursorStore:    store,
 	}
+	if store != nil {
+		if cur, err := store.Get(); err != nil {
+			logger.Warn("failed to load persisted cursor, starting empty", "error", err)
+		} else if cur != "" {
+			p.getUpdatesBuf = cur
+			logger.Info("restored getupdates cursor from store", "cursor_len", len(cur))
+		}
+	}
+	return p
 }
 
 // Run starts the long-polling loop. Blocks until ctx is cancelled or an unrecoverable error occurs.
@@ -189,6 +208,13 @@ func (p *Poller) Run(ctx context.Context) error {
 		// by the user's handler (e.g., store in DB for retry).
 		if resp.GetUpdatesBuf != "" {
 			p.getUpdatesBuf = resp.GetUpdatesBuf
+			if p.cursorStore != nil {
+				if err := p.cursorStore.Save(p.getUpdatesBuf); err != nil {
+					// Persist failure must not break polling; worst case is a
+					// replayed window after restart (same as pre-store behavior).
+					p.logger.Warn("failed to persist getupdates cursor", "error", err)
+				}
+			}
 		}
 	}
 }

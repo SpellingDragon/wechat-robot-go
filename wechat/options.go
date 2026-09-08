@@ -26,6 +26,7 @@ type botConfig struct {
 	tokenStore        TokenStore
 	contextTokenDir   string
 	contextTokenStore ContextTokenStore
+	cursorStore       CursorStore
 	httpClient        *http.Client
 	logger            *slog.Logger
 	channelVersion    string
@@ -64,6 +65,13 @@ func WithTokenFile(path string) Option {
 // When provided, it takes precedence over WithTokenFile.
 func WithTokenStore(store TokenStore) Option {
 	return func(c *botConfig) { c.tokenStore = store }
+}
+
+// WithCursorStore sets a custom store for persisting the getupdates polling
+// cursor so the bot resumes from its previous position after a restart.
+// When not provided, the cursor lives only in memory (legacy behavior).
+func WithCursorStore(store CursorStore) Option {
+	return func(c *botConfig) { c.cursorStore = store }
 }
 
 // WithContextTokenDir sets the directory path for persisting context tokens.

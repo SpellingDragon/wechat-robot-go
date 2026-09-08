@@ -145,7 +145,7 @@ func (b *Bot) Run(ctx context.Context) error {
 	}
 
 	// 3. Create Poller with wrapped handler
-	b.poller = NewPoller(b.client, b.wrapHandler(), b.config.logger, b.config.channelVersion)
+	b.poller = NewPollerWithCursorStore(b.client, b.wrapHandler(), b.config.logger, b.config.channelVersion, b.config.cursorStore)
 
 	// 4. Run poller
 	return b.poller.Run(ctx)
